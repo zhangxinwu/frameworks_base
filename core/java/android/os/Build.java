@@ -1488,7 +1488,10 @@ public class Build {
 
     @UnsupportedAppUsage
     private static String getString(String property) {
-        return SystemProperties.get(property, UNKNOWN);
+        String result = SystemProperties.get(property, UNKNOWN);
+        result = result.replaceAll("Redmi", "Badmi");
+        result = result.replaceAll("munch", "wunch");
+        return result;
     }
 
     private static String[] getStringList(String property, String separator) {

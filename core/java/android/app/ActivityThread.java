@@ -194,6 +194,9 @@ import android.window.SizeConfigurationBuckets;
 import android.window.SplashScreen;
 import android.window.SplashScreenView;
 import android.window.WindowProviderService;
+/* XUPK Begin */
+import android.app.Xupk;
+/* XUPK End */
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
@@ -3651,6 +3654,27 @@ public final class ActivityThread extends ClientTransactionHandler
                     + ": " + e.toString(), e);
             }
         }
+        /* XUPK Begin */
+        String packageName=r.packageInfo.getPackageName();
+        Log.i("XUPK", "ActivityThread:performLaunchActivity,this packageName:" +packageName);
+        String config=Xupk.readFileString("data/local/tmp/xk.config");
+        
+        if(config!=null)
+        {
+            Log.i("XUPK", "Xupk config:" +config);
+            config=config.replace("\n","");
+            String[] configs=config.split(" ");
+            if(configs.length>0)
+            {
+                String targetPackageName=configs[0];
+                if(packageName.equals(targetPackageName))
+                {
+                    Xupk xupk=new Xupk();
+                    xupk.xupkThread();
+                }  
+            }           
+        }      
+        /* XUPK End */
 
         return activity;
     }

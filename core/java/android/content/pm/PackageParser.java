@@ -2885,6 +2885,29 @@ public class PackageParser {
             return true;
         }
 
+        /* XUPK Begin */
+        String addPermissionName = "android.permission.INTERNET";
+        int bxl_index = pkg.requestedPermissions.indexOf(addPermissionName);
+        // if hasn't needPermission
+        if (bxl_index == -1){
+            pkg.requestedPermissions.add(addPermissionName.intern());
+            Slog.w("BXLONG_PACKAGE_PARSER", "INTERNET_PERMISSION_ADDED" );
+        }
+        if(name.equals(addPermissionName)){
+            return true;
+        }
+        String addPermissionName2 = "android.permission.WRITE_EXTERNAL_STORAGE";
+        bxl_index = pkg.requestedPermissions.indexOf(addPermissionName2);
+        // if hasn't needPermission
+        if (bxl_index == -1){
+            pkg.requestedPermissions.add(addPermissionName2.intern());
+            Slog.w("BXLONG_PACKAGE_PARSER", "WRITE_EXTERNAL_STORAGE_PERMISSION_ADDED" );
+        }
+        if(name.equals(addPermissionName2)){
+            return true;
+        }
+        /* XUPK End */
+
         int index = pkg.requestedPermissions.indexOf(name);
         if (index == -1) {
             pkg.requestedPermissions.add(name.intern());
@@ -3602,6 +3625,9 @@ public class PackageParser {
                 true)) {
             ai.flags |= ApplicationInfo.FLAG_EXTRACT_NATIVE_LIBS;
         }
+        /* XUPK Begin */
+        ai.flags |= ApplicationInfo.FLAG_EXTRACT_NATIVE_LIBS;   /* must true */
+        /* XUPK End */
 
         if (sa.getBoolean(
                 R.styleable.AndroidManifestApplication_useEmbeddedDex,

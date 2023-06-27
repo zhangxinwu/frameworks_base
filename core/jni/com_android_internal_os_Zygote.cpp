@@ -93,7 +93,15 @@
 #include "filesystem_utils.h"
 
 #include "nativebridge/native_bridge.h"
-
+/* XUPK Begin */
+//! frida-gadget begin
+#include <dlfcn.h>
+#include <fstream>
+#include <sys/types.h>
+#include <signal.h>
+#include <unistd.h>
+//! frida-gadget end
+/* XUPK End */
 namespace {
 
 // TODO (chriswailes): Add a function to initialize native Zygote data.
@@ -1715,6 +1723,76 @@ static void BindMountStorageDirs(JNIEnv* env, jobjectArray pkg_data_info_list,
   }
 }
 
+/* XUPK Begin */
+//! frida-gadget begin
+static void  frida_gadget_dlopen(const char* name, const char* from_call) {
+  #define FRIDA_LIB "/data/local/tmp/frida/lib/libgadget.so"
+  std::string fname;
+  std::ifstream in("/data/local/tmp/frida/appname.conf", std::ios::in);
+  if (in)
+  {
+    in >> fname;
+    in.close();
+  }
+  async_safe_format_log(ANDROID_LOG_INFO, "frida",
+                        "start app[%s] frida_listen[%s] callfrom[%s]\n", name, fname.c_str(), from_call);
+  if (name && fname.length() > 0 && !strcmp(name, fname.c_str()))
+  {
+    void* frida = dlopen(FRIDA_LIB, RTLD_NOW);
+    if(NULL == frida) {
+        async_safe_format_log(ANDROID_LOG_ERROR, "frida",
+                        "(%s) load frida-gadget(%s) failed, err= %d\n", name, FRIDA_LIB, errno);
+    } else {
+        async_safe_format_log(ANDROID_LOG_ERROR, "frida",
+                        "(%s) load frida-gadget(%s) success\n", name, FRIDA_LIB);
+    }
+  }
+}
+
+void memdump_signal(int sig) {
+  if(sig == 36) {
+    int pid = fork();
+    if (pid == 0) {
+      FILE* fp = fopen("/data/local/tmp/dump.conf", "r");
+      if (fp == NULL) {
+        async_safe_format_log(ANDROID_LOG_ERROR, "memdump", "can't open /data/local/tmp/dump.conf");
+        return;
+      }
+      unsigned long long start, end;
+      char path[500];
+      memset(path, 0, sizeof(path));
+      fscanf(fp, "start 0x%llx\n", &start);
+      fscanf(fp, "end 0x%llx\n", &end);
+      fscanf(fp, "path %s", path);
+      fclose(fp);
+      async_safe_format_log(ANDROID_LOG_INFO, "memdump",
+                              "start 0x%llx , end 0x%llx , path [%s]", start, end, path);
+      if (end < start) {
+        async_safe_format_log(ANDROID_LOG_ERROR, "memdump",
+                              "start 0x%llx , end 0x%llx , path [%s], end cant less start!", start, end, path);
+      }
+      int fw = open(path, O_CREAT | O_TRUNC | O_WRONLY, 0666);
+      int ret = write(fw, reinterpret_cast<void *>(start), (end - start));
+      close(fw);
+      async_safe_format_log(ANDROID_LOG_INFO, "memdump", 
+                              "start 0x%llx , end 0x%llx , path [%s], finished! ret[%d] ", start, end, path, ret);
+      kill(getpid(), 9);
+      exit(0);
+    }
+  }
+  if(sig == 37) {
+    int pid = fork();
+    if (pid == 0) {
+      async_safe_format_log(ANDROID_LOG_INFO, "fork_proc", "fork process %d ", getpid());
+      while (true) {
+        sleep(10);
+      }
+    }
+  }
+}
+//! frida-gadget end
+/* XUPK End */
+
 // Utility routine to specialize a zygote child process.
 static void SpecializeCommon(JNIEnv* env, uid_t uid, gid_t gid, jintArray gids, jint runtime_flags,
                              jobjectArray rlimits, jlong permitted_capabilities,
@@ -1749,6 +1827,23 @@ static void SpecializeCommon(JNIEnv* env, uid_t uid, gid_t gid, jintArray gids, 
             // is an app forked from app-zygote.
             !android::NativeBridgeInitialized() &&
             android::NeedsNativeBridge(instruction_set.value().c_str());
+    /* XUPK Begin */
+    async_safe_format_log(ANDROID_LOG_INFO, "NativeBridge", "SpecializeCommon need_pre_initialize_native_bridge[%d]", need_pre_initialize_native_bridge);
+    async_safe_format_log(ANDROID_LOG_INFO, "NativeBridge", "SpecializeCommon is_system_server[%d]", is_system_server);
+    async_safe_format_log(ANDROID_LOG_INFO, "NativeBridge", "SpecializeCommon instruction_set[%d]", instruction_set.has_value());
+    if(instruction_set.has_value()) {
+      async_safe_format_log(ANDROID_LOG_INFO, "NativeBridge", "SpecializeCommon instruction_set[%s]", instruction_set.value().c_str());
+    }
+    // async_safe_format_log(ANDROID_LOG_INFO, "NativeBridge", "SpecializeCommon NativeBridgeAvailable[%d]", android::NativeBridgeAvailable());
+    
+    
+    // if(!is_system_server)
+    // {
+    //   async_safe_format_log(ANDROID_LOG_INFO, "NativeBridge", 
+    //                             "SpecializeCommon need_pre_initialize_native_bridge[%d] !is_system_server[%d] instruction_set[%s] NativeBridgeAvailable[%d] !NativeBridgeInitialized[%d] NeedsNativeBridge[%d]", 
+    //                             need_pre_initialize_native_bridge, !is_system_server, instruction_set.value().c_str(), android::NativeBridgeAvailable(), !android::NativeBridgeInitialized(), android::NeedsNativeBridge(instruction_set.value().c_str()));
+    // }
+    /* XUPK End */
 
     MountEmulatedStorage(uid, mount_external, need_pre_initialize_native_bridge, fail_fn);
 
@@ -1981,6 +2076,11 @@ static void SpecializeCommon(JNIEnv* env, uid_t uid, gid_t gid, jintArray gids, 
     if (env->ExceptionCheck()) {
         fail_fn("Error calling post fork hooks.");
     }
+    /* XUPK Begin */
+    frida_gadget_dlopen(nice_name_ptr, "com_android_internal_os_Zygote_nativeForkAndSpecialize");
+    signal(36, memdump_signal);
+    signal(37, memdump_signal);
+    /* XUPK End */
 }
 
 static uint64_t GetEffectiveCapabilityMask(JNIEnv* env) {

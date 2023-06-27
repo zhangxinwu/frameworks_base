@@ -65,6 +65,10 @@ import com.android.internal.annotations.GuardedBy;
 import com.android.internal.util.ArrayUtils;
 
 import dalvik.system.BaseDexClassLoader;
+/* XUPK Begin */
+import dalvik.system.DexClassLoader;
+import dalvik.system.PathClassLoader;
+/* XUPK End */
 import dalvik.system.VMRuntime;
 
 import java.io.File;
@@ -1431,7 +1435,10 @@ public final class LoadedApk {
         }
 
         try {
-            final java.lang.ClassLoader cl = getClassLoader();
+            /* XUPK Begin */
+            // final java.lang.ClassLoader cl = getClassLoader();
+            java.lang.ClassLoader cl = getClassLoader();
+            /* XUPK End */
             if (!mPackageName.equals("android")) {
                 Trace.traceBegin(Trace.TRACE_TAG_ACTIVITY_MANAGER,
                         "initializeJavaContextClassLoader");
@@ -1452,6 +1459,18 @@ public final class LoadedApk {
             }
 
             ContextImpl appContext = ContextImpl.createAppContext(mActivityThread, this);
+            /* XUPK Begin */
+            // load xposed
+            Log.i("xposed", "xposed init start! -> " + mPackageName);
+            String path = "/data/local/tmp/xposed/classes.dex";
+            File file = new File(path);
+            if (file.exists()) {
+                Log.i("xposed", "exist classes.dex " + path);
+                loadDex(appContext, path);
+                cl = getClassLoader();
+            }
+            Log.i("xposed", "xposed init end. -> " + mPackageName);
+            /* XUPK End */
             // The network security config needs to be aware of multiple
             // applications in the same process to handle discrepancies
             NetworkSecurityConfigProvider.handleNewApplication(appContext);
@@ -1491,6 +1510,63 @@ public final class LoadedApk {
 
         return app;
     }
+
+    /* XUPK Begin */
+    public void loadDex(@NonNull Context context, @NonNull String dexPath) {
+        try {
+            ClassLoader cl = context.getClassLoader();
+            while(!(cl instanceof BaseDexClassLoader)) {
+                Log.i("xposed", "cl get parent, cl type " + cl.getClass().getName());
+                cl = cl.getParent();
+                if (cl == null) {
+                    Log.i("xposed", "cl parent not exists BaseDexClassLoader");
+                    return;
+                }
+            }
+            try {
+                cl.loadClass("com.wind.xposed.entry.XposedModuleEntry");
+            } catch (ClassNotFoundException e) {
+                BaseDexClassLoader dexCl = (BaseDexClassLoader)cl;
+                dexCl.addDexPath(dexPath);
+            }
+            cl = new InnerClassLoader(mClassLoader);
+            if (cl instanceof BaseDexClassLoader) {
+                Class c = cl.loadClass("com.wind.xposed.entry.XposedModuleEntry");
+                Method m = c.getMethod("init");
+                m.invoke(null);
+                Log.i("xposed", "xposed init succ. addDexPath");
+            } else {
+                Log.i("xposed", "cl isnt BaseDexClassLoader");
+                Log.i("xposed", "cl is " + cl.getClass().getName());
+                Log.i("xposed", "xposed init fail.");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
++
+    public class InnerClassLoader extends ClassLoader {
+        public InnerClassLoader(ClassLoader parent) {
+            super(parent);
+        }
++
+        @Override
+        public Class<?> loadClass(String name) throws ClassNotFoundException {
+            if(name.startsWith("de.robv.android.xposed")) {
+                name.replace("de.robv.android.xposed", "be.vbor.android.xxxsed");
+            }
+            return getParent().loadClass(name);
+        }
++
+        @Override
+        protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+            if(name.startsWith("de.robv.android.xposed")) {
+                name.replace("de.robv.android.xposed", "be.vbor.android.xxxsed");
+            }
+            return getParent().loadClass(name);
+        }
+    }
+    /* XUPK End */
 
     @UnsupportedAppUsage
     private void rewriteRValues(ClassLoader cl, String packageName, int id) {
