@@ -1,10 +1,14 @@
 package android.app;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.lang.StringBuilder;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -172,13 +176,21 @@ public class Xupk
             }
 
             // 获取目标类的所有成员函数
-            Method[] methods = klass.getDeclaredMethods();
+            Method[] methods = klass.getMethods();
             for (Method method : methods)
             {
                 String methodName=klass.getName()+method.toString();
                 classInfo.methodMap.put(methodName,method);
                 count++;
             }
+            methods = klass.getDeclaredMethods();
+            for (Method method : methods)
+            {
+                String methodName=klass.getName()+method.toString();
+                classInfo.methodMap.put(methodName,method);
+                count++;
+            }
+
         }
         catch (Error | Exception e)
         {
@@ -462,9 +474,7 @@ public class Xupk
                             {
                                 continue;
                             }
-                            FileWriter methodTmpWriter = new FileWriter(new File(methodTmpFileName));
-                            methodTmpWriter.write(cm);
-                            methodTmpWriter.close();
+                            writeFileString(methodTmpFileName, cm);
                             fakeInvoke(method);
                         }
                         catch(Error | Exception e)
@@ -476,9 +486,10 @@ public class Xupk
                 }
                 method_mapToFile.invoke(null); 
             }
-            FileWriter methodTmpWriter = new FileWriter(new File(methodTmpFileName));
-            methodTmpWriter.write("");
-            methodTmpWriter.close();
+            File methodTmpFile = new File(methodTmpFileName);
+            if(methodTmpFile.exists()) {
+                methodTmpFile.delete();
+            }
             return true;             
         }
         catch (Exception e)
@@ -494,24 +505,38 @@ public class Xupk
      */
     public static @Nullable String readFileString( @Nullable String fileName)
     {
-        FileInputStream fis=null;
-        try
-        {
-            File file = new File(fileName);
-            fis = new FileInputStream(file);
-            int length = fis.available();
-            byte[] buffer = new byte[length];
-            fis.read(buffer);
-            String str = new String(buffer);
-            fis.close();
-            return str;
+        File file = new File(fileName);
+        StringBuilder content = new StringBuilder();
+
+        try (FileInputStream inputStream = new FileInputStream(file);
+             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if(content.length() > 0) {
+                    content.append("\n");
+                }
+                content.append(line);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        catch (Exception e)
-        {
-            //e.printStackTrace();
-            //Log.e("XUPK", "ActivityThread:readFileString,read config file failed:" +e.getMessage()+";fileName:"+fileName);
+
+        return content.toString();
+    }
+
+    public static void writeFileString(@Nullable String filename, @Nullable String content)
+    {
+        File file = new File(filename);
+        try (FileOutputStream outputStream = new FileOutputStream(file);
+             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream))) {
+            writer.write(content);
+            writer.flush();
         }
-       return null;
+        catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private static native void native_fakeInvoke(Object method);

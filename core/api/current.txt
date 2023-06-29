@@ -7263,6 +7263,25 @@ package android.app {
     method public void onColorsChanged(@Nullable android.app.WallpaperColors, int);
   }
 
+  public class Xupk {
+    ctor public Xupk();
+    method public static void fakeInvoke(@Nullable Object);
+    method @Nullable public static ClassLoader getClassLoader();
+    method @Nullable public static Object getFieldOjbect(@Nullable String, @Nullable Object, @Nullable String);
+    method @Nullable public static java.lang.reflect.Method getMethod(@Nullable ClassLoader, @Nullable String, @Nullable String);
+    method public static int loadAllMethodsWithClass(@Nullable Class, @Nullable android.app.Xupk.ClassInfo);
+    method @Nullable public static String readFileString(@Nullable String);
+    method public void unpackWithClassLoader(int);
+    method public static void writeFileString(@Nullable String, @Nullable String);
+    method public void xupkThread();
+  }
+
+  public class Xupk.ClassInfo {
+    ctor public Xupk.ClassInfo();
+    field @Nullable public String className;
+    field public final java.util.Map<java.lang.String,java.lang.Object> methodMap;
+  }
+
   public interface ZygotePreload {
     method public void doPreload(@NonNull android.content.pm.ApplicationInfo);
   }

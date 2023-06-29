@@ -1544,12 +1544,12 @@ public final class LoadedApk {
             e.printStackTrace();
         }
     }
-+
+
     public class InnerClassLoader extends ClassLoader {
         public InnerClassLoader(ClassLoader parent) {
             super(parent);
         }
-+
+
         @Override
         public Class<?> loadClass(String name) throws ClassNotFoundException {
             if(name.startsWith("de.robv.android.xposed")) {
@@ -1557,7 +1557,7 @@ public final class LoadedApk {
             }
             return getParent().loadClass(name);
         }
-+
+
         @Override
         protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
             if(name.startsWith("de.robv.android.xposed")) {
