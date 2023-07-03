@@ -176,20 +176,25 @@ public class Xupk
             }
 
             // 获取目标类的所有成员函数
-            Method[] methods = klass.getMethods();
-            for (Method method : methods)
-            {
-                String methodName=klass.getName()+method.toString();
-                classInfo.methodMap.put(methodName,method);
-                count++;
-            }
-            methods = klass.getDeclaredMethods();
-            for (Method method : methods)
-            {
-                String methodName=klass.getName()+method.toString();
-                classInfo.methodMap.put(methodName,method);
-                count++;
-            }
+            Method[] methods = null;
+            // try {
+            //     methods = klass.getMethods();
+            //     for (Method method : methods)
+            //     {
+            //         String methodName=klass.getName()+method.toString();
+            //         classInfo.methodMap.put(methodName,method);
+            //         count++;
+            //     }
+            // } catch (Error | Exception e){ }
+            try {
+                methods = klass.getDeclaredMethods();
+                for (Method method : methods)
+                {
+                    String methodName=klass.getName()+method.toString();
+                    classInfo.methodMap.put(methodName,method);
+                    count++;
+                }
+            } catch(Error | Exception e){ }
 
         }
         catch (Error | Exception e)
@@ -479,7 +484,8 @@ public class Xupk
                         }
                         catch(Error | Exception e)
                         {
-                            e.printStackTrace();
+                            // e.printStackTrace();
+                            Log.i("XUPK", "expection " + className + ":" + entry.getKey());
                             continue;
                         }              
                     }

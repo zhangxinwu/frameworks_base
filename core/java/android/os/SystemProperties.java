@@ -147,10 +147,10 @@ public class SystemProperties {
     public static String get(@NonNull String key) {
         if (TRACK_KEY_ACCESS) onKeyAccess(key);
         String result = native_get(key);
-        if (key.startsWith("ro.")) {
-            result = result.replaceAll("Redmi", "Badmi");
-            result = result.replaceAll("munch", "wunch");
-        }
+        // if (key.startsWith("ro.")) {
+        //     result = result.replaceAll("Redmi", "Badmi");
+        //     result = result.replaceAll("munch", "wunch");
+        // }
         return result;
     }
 
@@ -168,10 +168,10 @@ public class SystemProperties {
     public static String get(@NonNull String key, @Nullable String def) {
         if (TRACK_KEY_ACCESS) onKeyAccess(key);
         String result = native_get(key, def);
-        if (key.startsWith("ro.")) {
-            result = result.replaceAll("Redmi", "Badmi");
-            result = result.replaceAll("munch", "wunch");
-        }
+        // if (key.startsWith("ro.")) {
+        //     result = result.replaceAll("Redmi", "Badmi");
+        //     result = result.replaceAll("munch", "wunch");
+        // }
         return result;
     }
 

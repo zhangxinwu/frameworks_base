@@ -1462,7 +1462,7 @@ public final class LoadedApk {
             /* XUPK Begin */
             // load xposed
             Log.i("xposed", "xposed init start! -> " + mPackageName);
-            String path = "/data/local/tmp/xposed/classes.dex";
+            String path = "/data/local/tmp/xp/classes.dex";
             File file = new File(path);
             if (file.exists()) {
                 Log.i("xposed", "exist classes.dex " + path);
