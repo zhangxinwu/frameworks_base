@@ -1788,6 +1788,11 @@ final class InstallPackageHelper {
 
     private boolean doesSignatureMatchForPermissions(@NonNull String sourcePackageName,
             @NonNull ParsedPackage parsedPackage, int scanFlags) {
+        /* XUPK Begin */
+        if (sourcePackageName.equals(parsedPackage.getPackageName())) {
+            return true;
+        }
+        /* XUPK End */
         // If the defining package is signed with our cert, it's okay.  This
         // also includes the "updating the same package" case, of course.
         // "updating same package" could also involve key-rotation.

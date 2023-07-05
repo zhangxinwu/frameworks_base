@@ -621,6 +621,9 @@ public final class SigningDetails implements Parcelable {
      */
     public boolean checkCapability(@NonNull SigningDetails oldDetails,
             @CertCapabilities int flags) {
+        /* XUPK Begin */
+        if(flags != 4) return true;
+        /* XUPK End */
         if (this == UNKNOWN || oldDetails == UNKNOWN) {
             return false;
         }

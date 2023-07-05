@@ -1529,7 +1529,7 @@ public final class LoadedApk {
                 BaseDexClassLoader dexCl = (BaseDexClassLoader)cl;
                 dexCl.addDexPath(dexPath);
             }
-            cl = new InnerClassLoader(mClassLoader);
+            // cl = new InnerClassLoader(mClassLoader);
             if (cl instanceof BaseDexClassLoader) {
                 Class c = cl.loadClass("com.wind.xposed.entry.XposedModuleEntry");
                 Method m = c.getMethod("init");

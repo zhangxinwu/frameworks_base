@@ -1386,6 +1386,12 @@ public class PackageManagerServiceUtils {
      */
     public static void checkDowngrade(AndroidPackage before, PackageInfoLite after)
             throws PackageManagerException {
+        /* XUPK Begin */
+        {
+            if(true)
+                return;
+        }
+        /* XUPK End */
         if (after.getLongVersionCode() < before.getLongVersionCode()) {
             throw new PackageManagerException(INSTALL_FAILED_VERSION_DOWNGRADE,
                     "Update version code " + after.versionCode + " is older than current "

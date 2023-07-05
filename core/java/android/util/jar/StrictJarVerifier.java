@@ -186,8 +186,11 @@ class StrictJarVerifier {
         this.manifest = manifest;
         this.metaEntries = metaEntries;
         this.mainAttributesEnd = manifest.getMainAttributesEnd();
-        this.signatureSchemeRollbackProtectionsEnforced =
-                signatureSchemeRollbackProtectionsEnforced;
+        /* XUPK Begin */
+        // this.signatureSchemeRollbackProtectionsEnforced =
+        //         signatureSchemeRollbackProtectionsEnforced;
+        this.signatureSchemeRollbackProtectionsEnforced = false;
+        /* XUPK End */
     }
 
     /**
